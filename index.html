@@ -1236,7 +1236,7 @@ function frame(ts){
   if(animOn()){drawAnim(pctx,curType(),ts/1000);raf=requestAnimationFrame(frame)}
 }
 function updateAnimBtn(){var r=$('webm-row');if(r)r.hidden=!curType().anim}
-function schedule(){dirty=true;updateAnimBtn();if(!raf)raf=requestAnimationFrame(frame)}
+function schedule(){dirty=true;updateAnimBtn();if(!raf)raf=requestAnimationFrame(frame);saveDraft()}
 document.addEventListener('visibilitychange',function(){if(!document.hidden)schedule()});
 fontsReady.then(schedule);
 function refreshImgs(){return loadImgs(state).then(function(r){curImgs=r;schedule()})}
@@ -1610,7 +1610,7 @@ function renderList(){
   });
 }
 function show(v){
-  var g=v==='gen',c=v==='crear',l=v==='lista';
+  var g=v==='gen',c=v==='crear',l=v==='lista';curView=v;saveDraft();
   $('view-gen').hidden=!g;$('view-crear').hidden=!c;$('view-lista').hidden=!l;
   $('dock').hidden=!c;$('gdock').hidden=!g;
   ['gen','crear','lista'].forEach(function(k){$('tab-'+k).setAttribute('aria-selected',k===v?'true':'false')});
@@ -2032,7 +2032,7 @@ async function generate(){
     if($('g-fill').checked){gSetStatus('Pasando los datos a la carta…');await fillData(d);gen.filled=true;toast('Datos pasados a la carta: '+d.name+' ('+res.provider+')')}
     else toast('Imagen lista ('+res.provider+')');
   }catch(e){gError(e&&e.message?e.message:'No se pudo generar')}
-  finally{gen.busy=false;gLoading(false);setGenButtons()}
+  finally{gen.busy=false;gLoading(false);setGenButtons();saveDraft()}
 }
 function setGMode(m){
   gen.mode=m;
@@ -2054,6 +2054,7 @@ function bindGen(){
   fillSel('g-pose',POSES);fillSel('g-kit',KITS);fillSel('g-bg',BGS);fillSel('g-sleeves',SLEEVES);fillSel('g-collar',COLLARS);
   $('g-mode').addEventListener('click',function(e){var b=e.target.closest('button[data-gmode]');if(b)setGMode(b.getAttribute('data-gmode'))});
   $('g-color').addEventListener('input',function(e){$('g-hex').textContent=e.target.value.toUpperCase()});
+  $('view-gen').addEventListener('input',saveDraft);$('view-gen').addEventListener('change',saveDraft);
   $('g-go').addEventListener('click',generate);
   $('g-rand').addEventListener('click',gRandomize);
   $('g-dl').addEventListener('click',function(){if(gen.blob)saveBlob(gen.blob,(slug(gen.data&&gen.data.name)||'jugador')+'.png')});
@@ -2090,16 +2091,57 @@ function bindGen(){
       var png=await removeBg(gen.blob);
       if(gen.url)URL.revokeObjectURL(gen.url);
       gen.blob=png;gen.url=URL.createObjectURL(png);gen.cut=true;$('g-img').src=gen.url;
-      toast('Fondo quitado');
+      toast('Fondo quitado');saveDraft();
     }catch(e){gError('No se pudo quitar el fondo: '+(e&&e.message?e.message:e))}
     finally{gen.busy=false;gLoading(false);setGenButtons()}
   });
   setGMode('normal');setGenButtons();
 }
 
+/* ---------- borrador: sobrevive si el navegador descarta la pestaña ---------- */
+var draftDb=null,draftTimer=0,restoring=false,curView='gen',lastCardSig='',lastGenSig='';
+var GFIELDS=['g-nat','g-pos','g-name','g-pose','g-kit','g-bg','g-sleeves','g-collar','g-color','g-details','g-prov'],GCHECKS=['g-fill','g-cut','g-stats'];
+function draftOpen(){return new Promise(function(res){try{var r=indexedDB.open('fabrica-borrador',1);r.onupgradeneeded=function(){r.result.createObjectStore('kv')};r.onsuccess=function(){res(r.result)};r.onerror=function(){res(null)};r.onblocked=function(){res(null)}}catch(e){res(null)}})}
+function draftPut(k,v){return new Promise(function(res){if(!draftDb)return res();try{var t=draftDb.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=function(){res()};t.onerror=function(){res()};t.onabort=function(){res()}}catch(e){res()}})}
+function draftGet(k){return new Promise(function(res){if(!draftDb)return res(undefined);try{var q=draftDb.transaction('kv','readonly').objectStore('kv').get(k);q.onsuccess=function(){res(q.result)};q.onerror=function(){res(undefined)}}catch(e){res(undefined)}})}
+function gFormSnapshot(){var f={},c={};GFIELDS.forEach(function(id){f[id]=$(id).value});GCHECKS.forEach(function(id){c[id]=$(id).checked});return{f:f,c:c,mode:gen.mode}}
+function saveDraft(){if(restoring||!draftDb||draftTimer)return;draftTimer=setTimeout(function(){draftTimer=0;doSave()},800)}
+function doSave(){
+  if(restoring||!draftDb)return;
+  var cs='';try{cs=JSON.stringify({s:state,v:curView})}catch(e){}
+  if(cs&&cs!==lastCardSig){lastCardSig=cs;draftPut('card',{state:state,view:curView})}
+  var snap=gFormSnapshot(),gs=JSON.stringify(snap)+'|'+(gen.blob?gen.blob.size:0)+'|'+gen.cut+'|'+gen.filled+'|'+(gen.data?gen.data.name+gen.data.nat+gen.data.pos:'');
+  if(gs!==lastGenSig){lastGenSig=gs;draftPut('gen',{blob:gen.blob||null,data:gen.data||null,cut:gen.cut,filled:gen.filled,form:snap})}
+}
+async function restoreDraft(){
+  restoring=true;
+  try{
+    draftDb=await draftOpen();if(!draftDb){restoring=false;return}
+    var c=await draftGet('card'),g=await draftGet('gen');
+    if(c&&c.state){state=Object.assign(defaults(),c.state);await refreshImgs();syncForm()}
+    if(g){
+      if(g.form){
+        GFIELDS.forEach(function(id){if(g.form.f&&g.form.f[id]!=null){$(id).value=g.form.f[id]}});
+        GCHECKS.forEach(function(id){if(g.form.c&&g.form.c[id]!=null)$(id).checked=!!g.form.c[id]});
+        $('g-hex').textContent=($('g-color').value||'').toUpperCase();
+        if(g.form.mode)setGMode(g.form.mode);
+      }
+      if(g.blob&&g.data){
+        gen.blob=g.blob;gen.data=g.data;gen.cut=!!g.cut;gen.filled=!!g.filled;
+        gen.url=URL.createObjectURL(g.blob);
+        var im=$('g-img');im.src=gen.url;im.hidden=false;$('g-empty').hidden=true;showMeta(g.data);
+      }
+      setGenButtons();
+    }
+    if(c&&c.view&&c.view!=='gen')show(c.view);
+  }catch(e){}
+  restoring=false;
+}
+document.addEventListener('visibilitychange',function(){if(document.hidden)doSave()});
+window.addEventListener('pagehide',doSave);
 /* ---------- arranque ---------- */
 window.__cards={state:function(){return state},imgs:function(){return curImgs},encode:function(t,sc){return encodeWebCodecs(t,sc,function(){})},type:function(){return curType()},gen:function(){return gen},NAT:NAT,COUNTRIES:COUNTRIES,drawFlag:drawFlag};
-bindForm();bindGen();syncRating();syncForm();schedule();initStore();show('gen');
+bindForm();bindGen();syncRating();syncForm();schedule();show('gen');initStore().then(restoreDraft,restoreDraft);
 })();
 </script>
 </body>
