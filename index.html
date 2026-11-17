@@ -153,6 +153,7 @@ input:disabled{opacity:.55}
             <label class="f">Nacionalidad<select id="g-nat"></select></label>
             <label class="f">Posición<select id="g-pos"></select></label>
             <label class="f full">Nombre (vacío = uno al azar según el país)<input type="text" id="g-name" maxlength="28" autocomplete="off" placeholder="Opcional"></label>
+            <label class="f full">Tipo de carta<select id="g-type"></select></label>
           </div>
           <label class="check"><input type="checkbox" id="g-fill">Pasar los datos a la carta al terminar (nombre, país, posición, estadísticas)</label>
           <label class="check"><input type="checkbox" id="g-cut">Quitar el fondo automáticamente (más lento; descarga un modelo la 1.ª vez)</label>
@@ -1748,7 +1749,7 @@ var SLEEVES=[['short sleeves','Cortas'],['long sleeves','Largas']];
 var COLLARS=[['round collar','Redondo'],['V-neck collar','En V'],['polo collar','Tipo polo'],['collarless neckline','Sin cuello']];
 var POSES=[['arms crossed, confident expression','Brazos cruzados'],['celebrating a goal with one fist raised','Celebrando'],['running forward','Corriendo'],['shouting in celebration','Gritando'],['focused expression','Concentrado'],['pointing forward','Señalando']];
 var NEG='text, letters, numbers, logo, watermark, brand, crest, deformed hands, extra fingers, cartoon, illustration, blurry, low quality';
-var RANGES={bronce:[50,64],plata:[65,74],oro:[75,84],platino:[85,89],diamante:[90,95],imparables:[88,94],inmortales:[90,97],futuras:[75,88],aniversario:[88,95],liotiz:[92,99],'once-oro':[90,97],reyes:[88,95],rivales:[86,93],mundialista:[87,94],tiempo:[88,95],pesadilla:[86,93]};
+var RANGES={bronce:[50,64],plata:[65,74],oro:[75,84],platino:[85,89],diamante:[90,95],imparables:[88,94],inmortales:[90,97],futuras:[75,88],aniversario:[88,95],liotiz:[94,99],'once-oro':[90,97],reyes:[88,95],rivales:[86,93],mundialista:[87,94],tiempo:[88,95],pesadilla:[86,93]};
 var gen={blob:null,url:'',data:null,busy:false,mode:'normal',filled:false,cut:false};
 
 function fillSel(id,pairs,first){
@@ -1988,9 +1989,22 @@ function randomStats(pos,typeId){
   var mean=off.reduce(function(a,b){return a+b},0)/6;
   return off.map(function(o){return clamp(Math.round(base+o-mean+(Math.random()*8-4)),25,99)});
 }
+function pickType(){
+  var v=$('g-type').value;
+  if(v&&v!=='auto'&&BUILTIN.concat(ctypes).some(function(t){return t.id===v}))return v;
+  var list,w;
+  if(gen.mode==='normal'){
+    list=['bronce','plata','oro','platino','diamante'];w=[30,28,22,12,8];
+    var tot=w.reduce(function(a,b){return a+b},0),r=Math.random()*tot,i;
+    for(i=0;i<list.length;i++){r-=w[i];if(r<=0)return list[i]}
+    return 'oro';
+  }
+  list=BUILTIN.filter(function(t){return(t.cat==='special'||t.cat==='event')&&t.id!=='liotiz'}).map(function(t){return t.id});
+  return pick(list);
+}
 async function fillData(d){
   var prev=state;
-  state=defaults(prev.typeId);
+  state=defaults(pickType());
   state.club=prev.club||'';state.crest=prev.crest||null;
   state.name=d.name;state.pos=d.pos;state.flag=d.nat;state.photo=null;state.photoStyle='cut';
   if($('g-stats').checked)state.stats=randomStats(d.pos,state.typeId);
@@ -2051,6 +2065,7 @@ function bindGen(){
   var nats=Object.keys(NAT).map(function(c){return[c,countryName(c)]}).sort(function(a,b){return a[1].localeCompare(b[1],'es')});
   fillSel('g-nat',nats,'Aleatoria');
   fillSel('g-pos',POS.map(function(p){return[p[0],p[0]+' · '+p[1]]}),'Aleatoria');
+  (function(){var CL={normal:'Normal',special:'Especial',event:'Evento'},o=[['auto','Al azar (normal con retrato normal; especial o evento con pose)']];BUILTIN.forEach(function(t){o.push([t.id,(CL[t.cat]||t.cat)+' · '+t.name])});fillSel('g-type',o)})();
   fillSel('g-pose',POSES);fillSel('g-kit',KITS);fillSel('g-bg',BGS);fillSel('g-sleeves',SLEEVES);fillSel('g-collar',COLLARS);
   $('g-mode').addEventListener('click',function(e){var b=e.target.closest('button[data-gmode]');if(b)setGMode(b.getAttribute('data-gmode'))});
   $('g-color').addEventListener('input',function(e){$('g-hex').textContent=e.target.value.toUpperCase()});
@@ -2100,7 +2115,7 @@ function bindGen(){
 
 /* ---------- borrador: sobrevive si el navegador descarta la pestaña ---------- */
 var draftDb=null,draftTimer=0,restoring=false,curView='gen',lastCardSig='',lastGenSig='';
-var GFIELDS=['g-nat','g-pos','g-name','g-pose','g-kit','g-bg','g-sleeves','g-collar','g-color','g-details','g-prov'],GCHECKS=['g-fill','g-cut','g-stats'];
+var GFIELDS=['g-nat','g-pos','g-name','g-type','g-pose','g-kit','g-bg','g-sleeves','g-collar','g-color','g-details','g-prov'],GCHECKS=['g-fill','g-cut','g-stats'];
 function draftOpen(){return new Promise(function(res){try{var r=indexedDB.open('fabrica-borrador',1);r.onupgradeneeded=function(){r.result.createObjectStore('kv')};r.onsuccess=function(){res(r.result)};r.onerror=function(){res(null)};r.onblocked=function(){res(null)}}catch(e){res(null)}})}
 function draftPut(k,v){return new Promise(function(res){if(!draftDb)return res();try{var t=draftDb.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=function(){res()};t.onerror=function(){res()};t.onabort=function(){res()}}catch(e){res()}})}
 function draftGet(k){return new Promise(function(res){if(!draftDb)return res(undefined);try{var q=draftDb.transaction('kv','readonly').objectStore('kv').get(k);q.onsuccess=function(){res(q.result)};q.onerror=function(){res(undefined)}}catch(e){res(undefined)}})}
