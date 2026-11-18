@@ -311,6 +311,7 @@ input:disabled{opacity:.55}
               <option value="3">PNG muy alta · 2160 × 3024</option>
             </select>
           </label>
+          <p class="hint" id="code-note" hidden style="margin-top:10px"></p>
           <div id="webm-row" hidden style="margin-top:14px">
             <button type="button" class="btn" id="btn-webm">Descargar animación (WebM)</button>
             <p class="hint">Crea un video de 4,6 segundos de esta carta en movimiento. Tarda unos segundos según tu dispositivo. Las esquinas cortadas salen en negro.</p>
@@ -1336,7 +1337,7 @@ function processFile(file,maxDim){
 
 /* ---------- estado ---------- */
 function defaults(typeId){
-  return{id:null,name:'',pos:'DC',flag:'CR',flagImg:null,club:'',crest:null,crestId:null,stats:[86,82,74,84,38,79],rating:0,auto:true,typeId:typeId||'oro',photo:null,photoStyle:'cut',zoom:1,ox:0,oy:0};
+  return{id:null,code:null,name:'',pos:'DC',flag:'CR',flagImg:null,club:'',crest:null,crestId:null,stats:[86,82,74,84,38,79],rating:0,auto:true,typeId:typeId||'oro',photo:null,photoStyle:'cut',zoom:1,ox:0,oy:0};
 }
 var state=defaults(),curImgs={photo:null,crest:null,flag:null};
 var editingType=null,ctypes=[],players=[],cat='normal',loaded=false;
@@ -1423,6 +1424,7 @@ function syncLabels(){
 function syncSliders(){$('f-zoom').value=state.zoom;$('f-ox').value=state.ox;$('f-oy').value=state.oy}
 function syncForm(){
   syncCrestSel();
+  var cn=$('code-note');if(cn){cn.hidden=!state.code;cn.textContent=state.code?'Código '+state.code+': la carta se descargará como '+state.code+'.webp (o .png).':''}
   $('f-name').value=state.name;$('f-pos').value=state.pos;$('f-club').value=state.club;
   $('f-flag').value=state.flag||'NONE';$('flag-custom').hidden=state.flag!=='CUSTOM';
   for(var i=0;i<6;i++)$('s'+i).value=state.stats[i];
@@ -1461,7 +1463,7 @@ function eqDefault(){
   CIDS=crestIdsList();var i=0,pi=0;EQ.teams=[];EQ.players=[];
   CRESTD.forEach(function(g){var ps=g[0].split(' · ');g[1].forEach(function(q){
     var code=('00'+(i+1)).slice(-3);EQ.teams.push({code:code,name:q[0],real:EQD.t[i][0],star:EQD.t[i][1]?'Sí':'No',country:ps[0],div:ps[1]||'',ci:i});
-    EQD.p[i].split(';').forEach(function(r){var f=r.split('|');pi++;EQ.players.push({code:('0000'+pi).slice(-5),name:f[0],pos:f[1],nat:f[2],team:code,tipo:f[3],st:f[4].split('.').map(Number)})});
+    EQD.p[i].split(';').forEach(function(r){var f=r.split('|');pi++;var sts=f[4].split('.').map(Number),md=Math.round(sts.reduce(function(a,b){return a+b},0)/6);EQ.players.push({code:('0000'+pi).slice(-5),name:f[0],pos:f[1],nat:f[2],team:code,tipo:md<=64?'bronce':md<=74?'plata':md<=84?'oro':md<=89?'platino':'diamante',st:sts})});
     i++})});
   EQ.src='genéricos integrados ('+EQ.teams.length+' equipos, '+EQ.players.length+' jugadores)';
 }
@@ -1507,7 +1509,7 @@ async function eqFromXlsx(file){
 }
 function eqCard(pl){
   var t=EQ.teams.filter(function(x){return x.code===pl.team})[0],st=pl.st.slice(0,6);
-  return{id:null,name:pl.name,pos:pl.pos,flag:pl.nat,flagImg:null,club:'',crest:null,crestId:t?CIDS[t.ci]||null:null,stats:st,rating:Math.round(st.reduce(function(a,b){return a+b},0)/6),auto:true,typeId:pl.tipo,photo:null,photoStyle:'cut',zoom:1,ox:0,oy:0};
+  return{id:null,code:pl.code,name:pl.name,pos:pl.pos,flag:pl.nat,flagImg:null,club:'',crest:null,crestId:t?CIDS[t.ci]||null:null,stats:st,rating:Math.round(st.reduce(function(a,b){return a+b},0)/6),auto:true,typeId:pl.tipo,photo:null,photoStyle:'cut',zoom:1,ox:0,oy:0};
 }
 /* ZIP sin compresión */
 var CRCT=(function(){var t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
@@ -1681,7 +1683,7 @@ async function saveEditor(){
 /* ---------- guardar, nueva, exportar ---------- */
 function newId(){return 'p_'+Date.now().toString(36)+Math.floor(Math.random()*46656).toString(36)}
 function snap(){
-  return{id:state.id||newId(),name:state.name.trim(),pos:state.pos,flag:state.flag,flagImg:state.flagImg||null,club:state.club.trim(),crest:state.crest||null,crestId:state.crestId||null,
+  return{id:state.id||newId(),code:state.code||null,name:state.name.trim(),pos:state.pos,flag:state.flag,flagImg:state.flagImg||null,club:state.club.trim(),crest:state.crest||null,crestId:state.crestId||null,
     stats:state.stats.slice(0,6),rating:state.rating,auto:state.auto,typeId:state.typeId,photo:state.photo||null,
     photoStyle:state.photoStyle,zoom:state.zoom,ox:state.ox,oy:state.oy,updated:Date.now()};
 }
@@ -1736,7 +1738,7 @@ async function exportPNG(p,t,imgs){
   try{
     var blob=await renderPNG(p,t,imgs);
     if(!blob){toast('No se pudo crear la imagen');return}
-    saveBlob(blob,(slug(p.name)||'carta')+'-'+(slug(t.name)||'tipo')+(blob.type==='image/webp'?'.webp':'.png'));toast('Descargando carta…');
+    saveBlob(blob,(p.code?p.code:(slug(p.name)||'carta')+'-'+(slug(t.name)||'tipo'))+(blob.type==='image/webp'?'.webp':'.png'));toast('Descargando carta…');
   }catch(e){toast('No se pudo crear la imagen')}
 }
 var recording=false;
@@ -1834,7 +1836,7 @@ async function downloadAll(){
   toast('Descargando '+players.length+' cartas…');
   for(var i=0;i<players.length;i++){
     var p=players[i],imgs=await loadImgs(p),blob=await renderPNG(p,typeById(p.typeId),imgs);
-    if(blob)saveBlob(blob,(slug(p.name)||'carta')+'-'+(slug(typeById(p.typeId).name)||'tipo')+(blob.type==='image/webp'?'.webp':'.png'));
+    if(blob)saveBlob(blob,(p.code?p.code:(slug(p.name)||'carta')+'-'+(slug(typeById(p.typeId).name)||'tipo'))+(blob.type==='image/webp'?'.webp':'.png'));
     await sleep(450);
   }
 }
@@ -1864,7 +1866,7 @@ async function drawThumb(cv,p){
   var x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);x.imageSmoothingQuality='high';x.drawImage(off,0,0,cv.width,cv.height);
 }
 async function loadPlayer(p){
-  state={id:p.id,name:p.name||'',pos:p.pos||'DC',flag:p.flag||'NONE',flagImg:p.flagImg||null,club:p.club||'',crest:p.crest||null,crestId:p.crestId||null,
+  state={id:p.id,code:p.code||null,name:p.name||'',pos:p.pos||'DC',flag:p.flag||'NONE',flagImg:p.flagImg||null,club:p.club||'',crest:p.crest||null,crestId:p.crestId||null,
     stats:(p.stats||[]).slice(0,6),rating:p.rating||0,auto:!!p.auto,typeId:p.typeId||'oro',photo:p.photo||null,
     photoStyle:p.photoStyle||'cut',zoom:p.zoom||1,ox:p.ox||0,oy:p.oy||0};
   while(state.stats.length<6)state.stats.push(70);
