@@ -259,11 +259,15 @@ input:disabled{opacity:.55}
             </div>
             <label class="f full">Nombre del club (se muestra solo si no hay escudo)<input type="text" id="f-club" maxlength="26" autocomplete="off" placeholder="Club"></label>
           </div>
-          <div class="row" style="margin-top:12px">
-            <label class="btn primary sm">Subir escudo del club<input type="file" id="f-crestfile" accept="image/*"></label>
+          <div class="row" style="margin-top:12px;align-items:center">
+            <canvas id="crest-prev" width="144" height="144" style="width:72px;height:72px;flex:none"></canvas>
+            <label class="f" style="flex:1;min-width:0">Escudo del club (dibujado)<select id="f-crestsel"></select></label>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <label class="btn primary sm">Subir escudo propio<input type="file" id="f-crestfile" accept="image/*"></label>
             <button type="button" class="btn sm" id="btn-crest-remove">Quitar escudo</button>
           </div>
-          <p class="hint">Lo ideal es un PNG con fondo transparente.</p>
+          <p class="hint">Los escudos dibujados son genéricos. Para uno real, súbelo (PNG con fondo transparente).</p>
         </section>
 
         <section class="block">
@@ -1116,7 +1120,9 @@ function drawBadges(x,p,t,imgs,o){
   }
   /* escudo o nombre del club */
   var cy=hasFlag?fy+fh+22:fy,box=96;
-  if(imgs.crest){
+  if(p.crestId&&CRESTMAP[p.crestId]){
+    drawCrest(x,CRESTMAP[p.crestId],fx+box/2,cy+box/2,box/2-4);
+  }else if(imgs.crest){
     var cw=imgs.crest.naturalWidth||imgs.crest.width,ch=imgs.crest.naturalHeight||imgs.crest.height,k=Math.min(box/cw,box/ch);
     x.save();x.shadowColor='rgba(0,0,0,.38)';x.shadowBlur=10;x.shadowOffsetY=3;
     x.drawImage(imgs.crest,fx+(box-cw*k)/2,cy+(box-ch*k)/2,cw*k,ch*k);x.restore();
@@ -1128,6 +1134,94 @@ function drawBadges(x,p,t,imgs,o){
     }
   }
 }
+/* ---------- escudos dibujados (referencias originales) ---------- */
+var CRESTD=[["Costa Rica · Primera Tica",[["Valle de Bruma","squircle","hoops","#15294f","#f2c500","#15294f","#ffffff","wave",""],["Robledal","arch","hoops","#7b1e3a","#4aa9e3","#7b1e3a","#ffffff","tree",""],["Piedra Blanca","shield","stripes","#ffffff","#15294f","#15294f","#ffffff","mountain",""],["Cumbre del Sol","hex","diag","#c8102e","#ffffff","#c8102e","#ffffff","sun",""],["Fortaleza del Este","squircle","chevron","#15294f","#f2c500","#15294f","#ffffff","tower",""],["Horizonte","round","stripes","#f28c00","#1a1a1a","#1a1a1a","#ffffff","sun",""],["Río Celeste","round","stripes","#1f5fbf","#ffffff","#1f5fbf","#ffffff","wave",""],["Bahía Esmeralda","round","hoops","#1e8a4c","#ffffff","#1e8a4c","#ffffff","ship",""],["Sendero Norte","squircle","hoops","#1a1a1a","#f2c500","#1a1a1a","#ffffff","tree",""],["Llanura Central","round","stripes","#13867f","#ffffff","#13867f","#ffffff","leaf",""]]],["Costa Rica · Segunda Tica",[["Palma Real","shield","hoops","#1e8a4c","#ffffff","#1e8a4c","#ffffff","crown",""],["Valle Griego","shield","stripes","#c8102e","#ffffff","#c8102e","#ffffff","leaf",""],["Península Azul","hex","stripes","#1f5fbf","#ffffff","#1f5fbf","#ffffff","crown",""],["Costa del Tesoro","arch","diag","#5b2a86","#f2c500","#5b2a86","#ffffff","wave",""],["Rosario del Sur","arch","sash","#f6d21a","#15294f","#15294f","#ffffff","flower",""],["Sarchí Verde","round","halves","#1e8a4c","#ffffff","#1e8a4c","#ffffff","bridge",""],["Santa Cruz Dorada","squircle","hoops","#f2c500","#15294f","#15294f","#ffffff","cross",""],["Montaña Roja","round","chevron","#c8102e","#ffffff","#c8102e","#ffffff","star",""],["Llanura Caribeña","round","stripes","#4aa9e3","#15294f","#15294f","#ffffff","leaf",""],["Carmelita Imperial","hex","stripes","#7b1e3a","#4aa9e3","#7b1e3a","#ffffff","crown",""],["Guadalupe Real","arch","stripes","#1f5fbf","#ffffff","#1f5fbf","#ffffff","crown",""],["Moravia del Valle","round","diag","#1a1a1a","#f2c500","#1a1a1a","#ffffff","leaf",""],["Bosque del Norte","arch","halves","#1f5fbf","#ffffff","#1f5fbf","#ffffff","tree",""],["Santa Ana del Río","hex","hoops","#f28c00","#1a1a1a","#1a1a1a","#ffffff","wave",""],["Uruguay del Centro","arch","sash","#f28c00","#1a1a1a","#1a1a1a","#ffffff","crown",""]]],["Argentina · Liga de la Plata",[["Puerto del Sur","round","halves","#15294f","#f2c500","#15294f","#ffffff","ship",""],["Núcleo del Río","round","halves","#ffffff","#c8102e","#c8102e","#ffffff","wave",""],["Academia del Plata","round","sash","#4aa9e3","#ffffff","#15294f","#ffffff","book",""],["Rojo Federal","arch","hoops","#c8102e","#ffffff","#c8102e","#ffffff","crown",""],["Ciclón del Barrio","squircle","sash","#15294f","#c8102e","#15294f","#ffffff","wave",""],["Sol de Rosario","arch","stripes","#15294f","#f2c500","#15294f","#ffffff","flower",""],["Parque del Oeste","shield","sash","#c8102e","#1a1a1a","#1a1a1a","#ffffff","crown",""],["Campanario","hex","sash","#4aa9e3","#ffffff","#15294f","#ffffff","tower",""],["Cumbre Cordobesa","hex","hoops","#15294f","#ffffff","#15294f","#ffffff","mountain",""],["Estrella Platense","hex","sash","#c8102e","#ffffff","#c8102e","#ffffff","star",""],["Bosque Antiguo","hex","halves","#15294f","#ffffff","#15294f","#ffffff","tree",""],["Fortaleza Granate","hex","diag","#7b1e3a","#ffffff","#7b1e3a","#ffffff","tower",""],["Sendero Verde","squircle","stripes","#1e8a4c","#ffffff","#1e8a4c","#ffffff","tree",""],["Bastión de Liniers","shield","hoops","#ffffff","#15294f","#15294f","#ffffff","tower",""],["Pioneros","hex","halves","#c8102e","#ffffff","#c8102e","#ffffff","eagle",""],["Delta del Tigre","squircle","halves","#15294f","#c8102e","#15294f","#ffffff","wave",""],["Unión del Litoral","round","hoops","#c8102e","#ffffff","#c8102e","#ffffff","star",""],["Puerto Colonia","shield","halves","#c8102e","#1a1a1a","#1a1a1a","#ffffff","ship",""],["Norte Decano","squircle","halves","#4aa9e3","#ffffff","#15294f","#ffffff","star",""],["Cumbre Andina","hex","stripes","#15294f","#ffffff","#15294f","#ffffff","mountain",""],["Costa Atlántica","arch","diag","#1e8a4c","#f6d21a","#1e8a4c","#ffffff","wave",""],["Viento Huracanado","shield","chevron","#ffffff","#c8102e","#c8102e","#ffffff","bolt",""],["Defensa del Bosque","round","stripes","#1e8a4c","#f6d21a","#1e8a4c","#ffffff","tree",""],["Santiago del Alba","round","hoops","#8b1d2c","#f1e4c8","#8b1d2c","#f1e4c8","sun",""],["Gloria del Centro","round","hoops","#1a1a1a","#f2c500","#1a1a1a","#ffffff","sun",""],["Junín del Campo","squircle","stripes","#4aa9e3","#15294f","#15294f","#ffffff","leaf",""],["Calamar del Río","shield","stripes","#6b4a2b","#ffffff","#6b4a2b","#ffffff","wave",""],["Barrio del Puente","arch","none","#c8102e","#ffffff","#c8102e","#ffffff","bridge",""],["Bajo Flores","shield","stripes","#ffffff","#1a1a1a","#1a1a1a","#ffffff","flower",""],["Río Cuarto","shield","halves","#1f5fbf","#ffffff","#1f5fbf","#ffffff","wave",""]]],["Argentina · Ascenso Argentino",[["Temperley del Lago","arch","stripes","#4aa9e3","#ffffff","#15294f","#ffffff","wave",""],["Oeste Unido","round","stripes","#4aa9e3","#15294f","#15294f","#ffffff","ring",""],["Cerveceros del Sur","arch","halves","#ffffff","#4aa9e3","#15294f","#ffffff","sun",""],["Norte Funebrero","shield","none","#c8102e","#1a1a1a","#1a1a1a","#ffffff","sun",""],["Tricolor del Centro","round","hoops","#15294f","#ffffff","#15294f","#ffffff","sun",""],["Bohemios del Parque","squircle","hoops","#f2c500","#15294f","#15294f","#ffffff","diamond",""],["Ferroviarios","round","halves","#1e8a4c","#ffffff","#1e8a4c","#ffffff","cog",""],["Floresta del Alba","shield","sash","#ffffff","#1a1a1a","#1a1a1a","#ffffff","flower",""],["Milrayas","shield","halves","#c8102e","#ffffff","#c8102e","#ffffff","diamond",""],["Puerto Antiguo","shield","chevron","#1a1a1a","#f2c500","#1a1a1a","#ffffff","ship",""],["Colegiales del Río","round","halves","#4aa9e3","#15294f","#15294f","#ffffff","wave",""],["Quemeros del Norte","round","halves","#13867f","#ffffff","#13867f","#ffffff","ring",""],["Midland del Valle","round","halves","#1f5fbf","#ffffff","#1f5fbf","#ffffff","leaf",""],["Paraná Unido","round","stripes","#1f5fbf","#ffffff","#1f5fbf","#ffffff","star",""],["Crema del Interior","round","halves","#f2c500","#15294f","#15294f","#ffffff","leaf",""],["Patagonia Dorada","round","chevron","#f2c500","#15294f","#15294f","#ffffff","crown",""],["Chaco del Norte","hex","none","#4aa9e3","#15294f","#15294f","#ffffff","cross",""],["Mitre Imperial","shield","stripes","#1f5fbf","#ffffff","#1f5fbf","#ffffff","crown",""],["Gauchos del Sur","hex","hoops","#8b1d2c","#f1e4c8","#8b1d2c","#f1e4c8","crown",""],["Cuyo Unido","shield","none","#4aa9e3","#15294f","#15294f","#ffffff","diamond",""],["Tucumán del Este","shield","hoops","#1e8a4c","#ffffff","#1e8a4c","#ffffff","star",""],["Jujuy Imperial","hex","stripes","#1a1a1a","#f2c500","#1a1a1a","#ffffff","crown",""],["Salta del Valle","round","hoops","#1f5fbf","#ffffff","#1f5fbf","#ffffff","leaf",""],["Cuervos del Norte","round","hoops","#f6d21a","#15294f","#15294f","#ffffff","cross",""],["Campo Argentino","hex","halves","#1e8a4c","#ffffff","#1e8a4c","#ffffff","leaf",""],["Almirantes","squircle","stripes","#13867f","#ffffff","#13867f","#ffffff","ship",""],["Defensores del Río","squircle","halves","#1e8a4c","#ffffff","#1e8a4c","#ffffff","wave",""],["Caseros del Centro","arch","hoops","#15294f","#f2c500","#15294f","#ffffff","diamond",""],["Academia Mediterránea","shield","halves","#f6d21a","#15294f","#15294f","#ffffff","book",""],["Bolívar del Sur","hex","diag","#1f5fbf","#ffffff","#1f5fbf","#ffffff","diamond",""],["Cruz del Oeste","hex","chevron","#5b2a86","#f2c500","#5b2a86","#ffffff","cross",""],["Tristán del Campo","arch","stripes","#1f5fbf","#ffffff","#1f5fbf","#ffffff","leaf",""],["Santiago del Sol","shield","hoops","#15294f","#ffffff","#15294f","#ffffff","sun",""],["Villa del Parque","arch","hoops","#4aa9e3","#15294f","#15294f","#ffffff","mono","V"],["Nueva Esperanza","round","halves","#1e8a4c","#1a1a1a","#1a1a1a","#ffffff","crown",""],["Puerto Patagónico","round","chevron","#13867f","#ffffff","#13867f","#ffffff","ship",""]]],["España · Liga de la Corona",[["Ciudad Condal","hex","diag","#7b1e3a","#1f5fbf","#7b1e3a","#ffffff","flower",""],["Corona Castellana","shield","halves","#ffffff","#15294f","#15294f","#ffffff","crown",""],["Guardia de Madrid","hex","diag","#c8102e","#ffffff","#c8102e","#ffffff","star",""],["Alcázar del Sur","shield","stripes","#ffffff","#c8102e","#c8102e","#ffffff","cross",""],["Jardines de Heliópolis","shield","halves","#1e8a4c","#ffffff","#1e8a4c","#ffffff","flower",""],["Costa Levantina","arch","diag","#ffffff","#1a1a1a","#1a1a1a","#ffffff","wave",""],["Reino del Norte","arch","stripes","#c8102e","#ffffff","#c8102e","#ffffff","crown",""],["Bruma Donostiarra","squircle","diag","#4aa9e3","#ffffff","#15294f","#ffffff","wave",""],["Villar de la Plana","hex","stripes","#f6d21a","#15294f","#15294f","#ffffff","sun",""],["Unión Salmantina","hex","diag","#8b1d2c","#f1e4c8","#8b1d2c","#f1e4c8","ring",""],["Xerez de la Frontera","shield","halves","#7b1e3a","#4aa9e3","#7b1e3a","#ffffff","ring",""],["Termas del Miño","hex","stripes","#c8102e","#ffffff","#c8102e","#ffffff","cross",""],["Ría de Vigo","hex","diag","#4aa9e3","#ffffff","#15294f","#ffffff","ring",""],["Torre de Hércules","arch","halves","#1f5fbf","#ffffff","#1f5fbf","#ffffff","tower",""],["Reino Navarro","squircle","none","#c8102e","#15294f","#15294f","#ffffff","crown",""],["Pucela del Duero","hex","hoops","#5b2a86","#ffffff","#5b2a86","#ffffff","sun",""],["Costa Asturiana","arch","stripes","#c8102e","#ffffff","#c8102e","#ffffff","wave",""],["Montaña Gerundense","squircle","hoops","#c8102e","#ffffff","#c8102e","#ffffff","star",""],["Islas del Mediterráneo","arch","hoops","#c8102e","#1a1a1a","#1a1a1a","#ffffff","diamond",""],["Puerta del Sur","arch","stripes","#1f5fbf","#ffffff","#1f5fbf","#ffffff","arches",""]]],["España · División de Ascenso",[["Murcia del Segura","hex","none","#7b1e3a","#4aa9e3","#7b1e3a","#ffffff","ring",""],["Gijón del Parque","squircle","chevron","#f6d21a","#15294f","#15294f","#ffffff","crown",""],["Ebro Deportivo","round","hoops","#ffffff","#1f5fbf","#1f5fbf","#ffffff","star",""],["Califato del Sur","squircle","halves","#1e8a4c","#ffffff","#1e8a4c","#ffffff","sun",""],["Costa Malagueña","arch","hoops","#4aa9e3","#ffffff","#15294f","#ffffff","wave",""],["Palmeral Ilicitano","shield","diag","#ffffff","#1e8a4c","#1e8a4c","#ffffff","leaf",""],["Bahía Gaditana","arch","chevron","#f6d21a","#1f5fbf","#1f5fbf","#ffffff","ship",""],["Llanura de Castellón","squircle","hoops","#1a1a1a","#ffffff","#1a1a1a","#ffffff","leaf",""],["Cantábrico Racing","round","diag","#1e8a4c","#ffffff","#1e8a4c","#ffffff","cross",""],["Burgos Medieval","round","hoops","#ffffff","#1a1a1a","#1a1a1a","#ffffff","diamond",""],["Reino Leonés","shield","hoops","#ffffff","#c8102e","#c8102e","#ffffff","crown",""],["Arsenal Naval","hex","halves","#1e8a4c","#ffffff","#1e8a4c","#ffffff","ship",""],["Muralla Lucense","arch","hoops","#c8102e","#ffffff","#c8102e","#ffffff","tower",""],["Recreo del Odiel","shield","halves","#4aa9e3","#ffffff","#15294f","#ffffff","sun",""],["Mancha Imperial","squircle","hoops","#ffffff","#c8102e","#c8102e","#ffffff","crown",""],["Ibiza Azul","arch","halves","#4aa9e3","#ffffff","#15294f","#ffffff","diamond",""],["Cartagena Antigua","shield","sash","#1a1a1a","#ffffff","#1a1a1a","#ffffff","cross",""],["Logroño del Ebro","round","stripes","#13867f","#ffffff","#13867f","#ffffff","diamond",""],["Madrid Popular","round","stripes","#13867f","#ffffff","#13867f","#ffffff","cross",""],["Avilés del Cantábrico","round","hoops","#5b2a86","#f2c500","#5b2a86","#ffffff","crown",""],["Almería del Desierto","arch","diag","#c8102e","#ffffff","#c8102e","#ffffff","sun",""],["Tarraco Imperial","round","halves","#7b1e3a","#4aa9e3","#7b1e3a","#ffffff","crown",""]]],["Inglaterra · Crown League",[["Northstar","round","chevron","#c8102e","#1a1a1a","#1a1a1a","#ffffff","star",""],["Skybridge","hex","stripes","#4aa9e3","#ffffff","#15294f","#ffffff","bridge",""],["Mersey Crown","squircle","stripes","#c8102e","#ffffff","#c8102e","#ffffff","crown",""],["Royal Toffees","shield","none","#1f5fbf","#ffffff","#1f5fbf","#ffffff","crown",""],["Cannonhall","arch","hoops","#c8102e","#ffffff","#c8102e","#ffffff","cog",""],["Kingsbridge","shield","hoops","#1f5fbf","#ffffff","#1f5fbf","#ffffff","crown",""],["White Lily","arch","diag","#ffffff","#15294f","#15294f","#ffffff","lily",""],["Eagleford","round","hoops","#1f5fbf","#c8102e","#c8102e","#ffffff","eagle",""],["Iron Thames","shield","hoops","#7b1e3a","#4aa9e3","#7b1e3a","#ffffff","wave",""],["Tyne Fortress","shield","hoops","#1a1a1a","#ffffff","#1a1a1a","#ffffff","tower",""],["Aston Lions","arch","sash","#7b1e3a","#4aa9e3","#7b1e3a","#ffffff","lion",""],["Forge Birmingham","round","chevron","#1f5fbf","#ffffff","#1f5fbf","#ffffff","cog",""],["Sherwood","squircle","chevron","#c8102e","#ffffff","#c8102e","#ffffff","tree",""],["Trent Borough","shield","diag","#1a1a1a","#ffffff","#1a1a1a","#ffffff","wave",""],["White Rose","round","halves","#ffffff","#f6d21a","#15294f","#ffffff","flower",""],["Wearside","arch","stripes","#c8102e","#ffffff","#c8102e","#ffffff","wave",""],["Seabright","round","stripes","#1f5fbf","#ffffff","#1f5fbf","#ffffff","wave",""],["Dorset Mariners","round","sash","#c8102e","#1a1a1a","#1a1a1a","#ffffff","ship",""],["Golden Wolves","arch","halves","#f2c500","#1a1a1a","#1a1a1a","#ffffff","wolf",""],["Riverside","hex","diag","#ffffff","#1a1a1a","#1a1a1a","#ffffff","wave",""]]],["Inglaterra · National Championship",[["Northern Rebels","arch","halves","#c8102e","#ffffff","#c8102e","#ffffff","diamond",""],["Roman Chester","shield","halves","#7b1e3a","#4aa9e3","#7b1e3a","#ffffff","flower",""],["Borough of Bury","shield","diag","#7b1e3a","#4aa9e3","#7b1e3a","#ffffff","flower",""],["Enfield Meadows","hex","hoops","#c8102e","#ffffff","#c8102e","#ffffff","flower",""],["East London Community","hex","none","#f28c00","#1a1a1a","#1a1a1a","#ffffff","ring",""],["Minster City","squircle","sash","#c8102e","#15294f","#15294f","#ffffff","ring",""],["Oxford Scholars","round","halves","#f6d21a","#15294f","#15294f","#ffffff","book",""],["Cambridge Vale","round","diag","#f6d21a","#1a1a1a","#1a1a1a","#ffffff","bridge",""],["Bristol Harbour","arch","sash","#1f5fbf","#ffffff","#1f5fbf","#ffffff","ship",""],["Redcliffe","squircle","hoops","#c8102e","#ffffff","#c8102e","#ffffff","sun",""],["Valley of Bradford","round","stripes","#7b1e3a","#f2c500","#7b1e3a","#ffffff","leaf",""],["Halifax Moor","arch","halves","#1f5fbf","#ffffff","#1f5fbf","#ffffff","mountain",""],["Dragon's Gate","hex","stripes","#c8102e","#ffffff","#c8102e","#ffffff","arches",""],["Borderlands","arch","hoops","#1f5fbf","#ffffff","#1f5fbf","#ffffff","flower",""],["Blackpool Shore","squircle","halves","#f28c00","#ffffff","#15294f","#ffffff","wave",""],["Portsmouth Docklands","hex","diag","#1f5fbf","#ffffff","#1f5fbf","#ffffff","ship",""],["Plymouth Green","arch","hoops","#1e8a4c","#ffffff","#1e8a4c","#ffffff","tree",""],["Exeter Grecians","shield","diag","#c8102e","#ffffff","#c8102e","#ffffff","mono","E"],["Swindon Fields","shield","sash","#c8102e","#ffffff","#c8102e","#ffffff","leaf",""],["Reading Crown","shield","hoops","#1f5fbf","#ffffff","#1f5fbf","#ffffff","crown",""],["Bolton Heights","arch","halves","#ffffff","#15294f","#15294f","#ffffff","mountain",""],["Wigan Forge","squircle","halves","#1f5fbf","#ffffff","#1f5fbf","#ffffff","cog",""],["Stockport Vale","shield","chevron","#1f5fbf","#ffffff","#1f5fbf","#ffffff","ship",""],["Merseyport","squircle","halves","#ffffff","#1f5fbf","#1f5fbf","#ffffff","ship",""]]],["Irlanda · Éire Championship",[["Dublin Emerald","arch","stripes","#1e8a4c","#ffffff","#1e8a4c","#ffffff","sun",""],["Shamrock Vale","arch","stripes","#1e8a4c","#ffffff","#1e8a4c","#ffffff","leaf",""],["Cork Harbour","squircle","hoops","#1e8a4c","#ffffff","#1e8a4c","#ffffff","ship",""],["Dundalk Iron","squircle","sash","#ffffff","#1a1a1a","#1a1a1a","#ffffff","cog",""],["Galway Atlantic","shield","stripes","#7b1e3a","#ffffff","#7b1e3a","#ffffff","wave",""],["Derry Red","round","chevron","#c8102e","#ffffff","#c8102e","#ffffff","flower",""],["Sligo Waves","shield","chevron","#c8102e","#ffffff","#c8102e","#ffffff","wave",""],["Waterford Blue","hex","none","#1f5fbf","#ffffff","#1f5fbf","#ffffff","star",""],["Drogheda Fields","arch","halves","#1f5fbf","#ffffff","#1f5fbf","#ffffff","leaf",""],["Patrick's Green","squircle","chevron","#c8102e","#ffffff","#c8102e","#ffffff","tree",""],["Limerick Scholars","hex","diag","#4aa9e3","#15294f","#15294f","#ffffff","book",""],["Shelbourne Heights","hex","chevron","#c8102e","#ffffff","#c8102e","#ffffff","mountain",""]]],["Irlanda · Irish National Division",[["Athlone River","shield","hoops","#1a1a1a","#ffffff","#1a1a1a","#ffffff","wave",""],["Bray Seagulls","round","sash","#1e8a4c","#ffffff","#1e8a4c","#ffffff","wave",""],["Finn Valley","squircle","halves","#1f5fbf","#ffffff","#1f5fbf","#ffffff","leaf",""],["Treaty Emerald","round","halves","#1e8a4c","#ffffff","#1e8a4c","#ffffff","ring",""],["Wexford Coast","round","stripes","#ffffff","#1a1a1a","#1a1a1a","#ffffff","wave",""],["Kerry Green","arch","chevron","#1e8a4c","#ffffff","#1e8a4c","#ffffff","tree",""],["Longford Forest","arch","sash","#c8102e","#1a1a1a","#1a1a1a","#ffffff","tree",""],["Cobh Harbour","squircle","chevron","#c8102e","#ffffff","#c8102e","#ffffff","ship",""]]],["Chequia · Czech Championship",[["Iron Crown","arch","hoops","#7b1e3a","#15294f","#15294f","#ffffff","crown",""],["Red Star of Prague","shield","halves","#c8102e","#ffffff","#c8102e","#ffffff","star",""],["Bohemian Fields","squircle","stripes","#1e8a4c","#ffffff","#1e8a4c","#ffffff","leaf",""],["Moravian Citadel","shield","stripes","#1e8a4c","#ffffff","#1e8a4c","#ffffff","tower",""],["Brno Fortress","squircle","halves","#1a1a1a","#c8102e","#1a1a1a","#ffffff","tower",""],["Plzeň Legacy","shield","none","#c8102e","#1f5fbf","#c8102e","#ffffff","diamond",""],["Ostrava Forge","hex","hoops","#1f5fbf","#ffffff","#1f5fbf","#ffffff","cog",""],["Liberec Peaks","hex","stripes","#1f5fbf","#ffffff","#1f5fbf","#ffffff","mountain",""],["Boleslav Valley","round","sash","#f6d21a","#15294f","#15294f","#ffffff","leaf",""],["Olomouc Gardens","squircle","stripes","#f6d21a","#15294f","#15294f","#ffffff","flower",""],["Jablonec Forest","round","sash","#1e8a4c","#ffffff","#1e8a4c","#ffffff","tree",""],["Hradec River","squircle","hoops","#c8102e","#ffffff","#c8102e","#ffffff","wave",""],["Pardubice Plains","squircle","stripes","#c8102e","#ffffff","#c8102e","#ffffff","leaf",""],["Slovácko Heritage","shield","stripes","#ffffff","#c8102e","#c8102e","#ffffff","diamond",""],["Teplice Springs","squircle","sash","#f6d21a","#ffffff","#15294f","#ffffff","wave",""],["Zlín Heights","shield","hoops","#ffffff","#15294f","#15294f","#ffffff","mountain",""]]],["Chequia · Czech National League",[["Ústí River","squircle","halves","#f28c00","#1a1a1a","#1a1a1a","#ffffff","wave",""],["Dukla Heights","round","hoops","#f6d21a","#c8102e","#c8102e","#ffffff","mountain",""],["Příbram Silver","round","halves","#1f5fbf","#ffffff","#1f5fbf","#ffffff","diamond",""],["Jihlava Highlands","shield","diag","#5b2a86","#f2c500","#5b2a86","#ffffff","mountain",""],["Opava Silesia","round","hoops","#f6d21a","#15294f","#15294f","#ffffff","mono","O"],["Kladno Knights","shield","stripes","#1f5fbf","#ffffff","#1f5fbf","#ffffff","cross",""],["Žižkov Tower","hex","chevron","#c8102e","#ffffff","#c8102e","#ffffff","tower",""],["Karviná Miners","round","none","#f6d21a","#1a1a1a","#1a1a1a","#ffffff","cog",""],["Táborsko South","shield","none","#13867f","#ffffff","#13867f","#ffffff","flower",""],["Třinec Steel","hex","none","#c8102e","#ffffff","#c8102e","#ffffff","cog",""],["Vlašim Meadows","arch","none","#1a1a1a","#f2c500","#1a1a1a","#ffffff","flower",""],["Prostějov United","shield","hoops","#8b1d2c","#f1e4c8","#8b1d2c","#f1e4c8","crown",""],["Česká Lípa Forest","arch","stripes","#4aa9e3","#15294f","#15294f","#ffffff","tree",""],["Třebíč Athletic","hex","chevron","#13867f","#ffffff","#13867f","#ffffff","flower",""]]],["Bélgica · Belgische Kampioensklasse",[["Brussels Crown","round","hoops","#5b2a86","#ffffff","#5b2a86","#ffffff","crown",""],["Bruges Heritage","squircle","hoops","#1f5fbf","#1a1a1a","#1a1a1a","#ffffff","diamond",""],["Green Crescent","round","stripes","#1e8a4c","#1a1a1a","#1a1a1a","#ffffff","moon",""],["Antwerp Fortress","arch","none","#c8102e","#ffffff","#c8102e","#ffffff","tower",""],["Limburg Miners","arch","hoops","#1f5fbf","#ffffff","#1f5fbf","#ffffff","cog",""],["Buffalo Fields","arch","stripes","#1f5fbf","#ffffff","#1f5fbf","#ffffff","bull",""],["Liège Standard","hex","diag","#c8102e","#ffffff","#c8102e","#ffffff","cross",""],["Black Valley","hex","diag","#1a1a1a","#ffffff","#1a1a1a","#ffffff","leaf",""],["Yellow Meuse","squircle","stripes","#f6d21a","#c8102e","#c8102e","#ffffff","wave",""],["Leuven Scholars","shield","diag","#ffffff","#1e8a4c","#1e8a4c","#ffffff","book",""],["Kempen Fields","round","hoops","#f6d21a","#1f5fbf","#1f5fbf","#ffffff","leaf",""],["Canary Hills","round","hoops","#f6d21a","#1f5fbf","#1f5fbf","#ffffff","mountain",""],["Kortrijk Heritage","shield","stripes","#c8102e","#ffffff","#c8102e","#ffffff","diamond",""],["Alpine Gate","round","none","#1a1a1a","#ffffff","#1a1a1a","#ffffff","arches",""],["La Louvière Forest","arch","hoops","#13867f","#ffffff","#13867f","#ffffff","tree",""],["Lommel Lakes","squircle","halves","#1e8a4c","#ffffff","#1e8a4c","#ffffff","wave",""],["Union of Saint-Gilles","shield","chevron","#f6d21a","#15294f","#15294f","#ffffff","cross",""],["Waregem Plains","round","stripes","#c8102e","#1e8a4c","#c8102e","#ffffff","leaf",""]]],["Bélgica · Nationale Reeks",[["Beerschot Harbour","arch","diag","#5b2a86","#ffffff","#5b2a86","#ffffff","bee",""],["Dender Valley","hex","none","#8b1d2c","#f1e4c8","#8b1d2c","#f1e4c8","leaf",""],["Future Brussels","arch","sash","#f6d21a","#15294f","#15294f","#ffffff","crown",""],["Genk Academy","hex","stripes","#7b1e3a","#4aa9e3","#7b1e3a","#ffffff","book",""],["Bruges Academy","arch","diag","#f6d21a","#15294f","#15294f","#ffffff","book",""],["Ghent Academy","arch","none","#1a1a1a","#f2c500","#1a1a1a","#ffffff","book",""],["Patro Highlands","arch","halves","#f6d21a","#15294f","#15294f","#ffffff","mountain",""],["Borain Hills","round","none","#7b1e3a","#4aa9e3","#7b1e3a","#ffffff","mountain",""],["Lokeren Fields","arch","hoops","#ffffff","#1a1a1a","#1a1a1a","#ffffff","leaf",""],["Liège Royal","round","sash","#7b1e3a","#ffffff","#7b1e3a","#ffffff","crown",""],["Seraing Steel","shield","diag","#1a1a1a","#ffffff","#1a1a1a","#ffffff","cog",""],["Hasselt United","shield","hoops","#1e8a4c","#ffffff","#1e8a4c","#ffffff","crown",""],["Virton Forest","shield","stripes","#c8102e","#ffffff","#c8102e","#ffffff","tree",""],["Lier Valley","shield","chevron","#f6d21a","#1a1a1a","#1a1a1a","#ffffff","leaf",""]]]]
+;
+var CRESTMAP={};
+function crestSlug(n){return n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
+CRESTD.forEach(function(g){g[1].forEach(function(r){CRESTMAP[crestSlug(r[0])]={name:r[0],shape:r[1],pat:r[2],c1:r[3],c2:r[4],c3:r[5],c4:r[6],emb:r[7],ch:r[8]}})});
+function drawCrest(x,cfg,cx,cy,S){
+  var CF=FB;
+  function shape(){
+    x.beginPath();
+    switch(cfg.shape){
+      case 'round':x.arc(0,0,.92,0,6.2832);break;
+      case 'hex':x.moveTo(0,-.98);x.lineTo(.85,-.5);x.lineTo(.85,.5);x.lineTo(0,.98);x.lineTo(-.85,.5);x.lineTo(-.85,-.5);x.closePath();break;
+      case 'squircle':x.moveTo(-.8,-.85);x.lineTo(.8,-.85);x.lineTo(.8,.45);x.lineTo(0,1);x.lineTo(-.8,.45);x.closePath();break;
+      case 'arch':x.moveTo(-.8,-.1);x.arc(0,-.1,.8,Math.PI,0);x.lineTo(.8,.55);x.lineTo(0,1);x.lineTo(-.8,.55);x.closePath();break;
+      default:x.moveTo(-.82,-.9);x.lineTo(.82,-.9);x.lineTo(.82,.1);x.quadraticCurveTo(.82,.7,0,1);x.quadraticCurveTo(-.82,.7,-.82,.1);x.closePath();
+    }
+  }
+  function poly(c,pts){x.fillStyle=c;x.beginPath();pts.forEach(function(p,i){if(i)x.lineTo(p[0],p[1]);else x.moveTo(p[0],p[1])});x.closePath();x.fill()}
+  function star(c,px,py,r){x.fillStyle=c;x.beginPath();for(var i=0;i<10;i++){var a=-Math.PI/2+i*Math.PI/5,q=i%2?r*.4:r;x.lineTo(px+Math.cos(a)*q,py+Math.sin(a)*q)}x.closePath();x.fill()}
+  function circ(c,px,py,r){x.fillStyle=c;x.beginPath();x.arc(px,py,r,0,6.2832);x.fill()}
+  x.save();x.translate(cx,cy);x.scale(S,S);
+  /* sombra */
+  x.save();x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=.12*S;x.shadowOffsetY=.05*S;shape();x.fillStyle=cfg.c1;x.fill();x.restore();
+  /* campo y dibujo */
+  x.save();shape();x.clip();
+  x.fillStyle=cfg.c1;x.fillRect(-1.2,-1.2,2.4,2.4);
+  var i;
+  switch(cfg.pat){
+    case 'stripes':for(i=0;i<5;i++)if(i%2)x.fillStyle=cfg.c2,x.fillRect(-1+i*.4,-1.2,.4,2.4);break;
+    case 'hoops':for(i=0;i<6;i++)if(i%2){x.fillStyle=cfg.c2;x.fillRect(-1.2,-1+i*.36,2.4,.36)}break;
+    case 'halves':x.fillStyle=cfg.c2;x.fillRect(0,-1.2,1.2,2.4);break;
+    case 'chevron':poly(cfg.c2,[[-1.1,-.15],[0,.55],[1.1,-.15],[1.1,.25],[0,.95],[-1.1,.25]]);break;
+    case 'diag':poly(cfg.c2,[[-1.1,-.45],[-.45,-1.1],[1.1,.45],[.45,1.1]]);break;
+    case 'sash':poly(cfg.c2,[[1.1,-.45],[.45,-1.1],[-1.1,.45],[-.45,1.1]]);break;
+  }
+  x.restore();
+  /* borde */
+  shape();x.lineWidth=.07;x.strokeStyle=cfg.c4==='#ffffff'&&cfg.c1==='#ffffff'?cfg.c2:'rgba(255,255,255,.9)';x.stroke();
+  x.save();shape();x.clip();shape();x.lineWidth=.13;x.strokeStyle='rgba(0,0,0,.22)';x.stroke();x.restore();
+  /* medallón */
+  var my=-.05;
+  x.save();x.translate(0,my);
+  circ('rgba(0,0,0,.25)',0,.03,.5);circ(cfg.c4,0,0,.5);
+  x.lineWidth=.045;x.strokeStyle=cfg.c3;x.beginPath();x.arc(0,0,.5,0,6.2832);x.stroke();
+  var c=cfg.c3,bg=cfg.c4;
+  x.fillStyle=c;x.strokeStyle=c;x.lineCap='round';x.lineJoin='round';
+  switch(cfg.emb){
+    case 'star':star(c,0,.02,.36);break;
+    case 'stars3':star(c,0,-.16,.17);star(c,-.2,.14,.17);star(c,.2,.14,.17);break;
+    case 'sun':circ(c,0,0,.15);x.lineWidth=.06;for(i=0;i<12;i++){var a=i*Math.PI/6;x.beginPath();x.moveTo(Math.cos(a)*.23,Math.sin(a)*.23);x.lineTo(Math.cos(a)*.36,Math.sin(a)*.36);x.stroke()}break;
+    case 'flower':for(i=0;i<6;i++){var b=i*Math.PI/3;circ(c,Math.cos(b)*.2,Math.sin(b)*.2,.14)}circ(bg,0,0,.09);circ(c,0,0,.05);break;
+    case 'tower':x.fillRect(-.17,-.08,.34,.46);[-.24,-.07,.1].forEach(function(px){x.fillRect(px,-.28,.14,.2)});x.fillStyle=bg;x.beginPath();x.moveTo(-.07,.38);x.lineTo(-.07,.2);x.arc(0,.2,.07,Math.PI,0);x.lineTo(.07,.38);x.closePath();x.fill();x.fillRect(-.03,-.06,.06,.1);break;
+    case 'bridge':x.fillRect(-.4,-.12,.8,.1);x.fillRect(-.4,-.02,.8,.38);x.fillStyle=bg;[-.26,0,.26].forEach(function(px){x.beginPath();x.moveTo(px-.1,.36);x.lineTo(px-.1,.2);x.arc(px,.2,.1,Math.PI,0);x.lineTo(px+.1,.36);x.closePath();x.fill()});break;
+    case 'grapes':[[-.2,-.12],[0,-.12],[.2,-.12],[-.1,.04],[.1,.04],[0,.2]].forEach(function(p){circ(c,p[0],p[1],.1)});x.lineWidth=.05;x.beginPath();x.moveTo(0,-.2);x.lineTo(.02,-.36);x.stroke();x.beginPath();x.ellipse(.14,-.3,.12,.06,-.4,0,6.2832);x.fill();break;
+    case 'bull':x.lineWidth=.1;x.beginPath();x.arc(0,.08,.3,Math.PI*1.08,Math.PI*1.92);x.stroke();x.beginPath();x.moveTo(-.12,-.02);x.lineTo(.12,-.02);x.lineTo(.17,.2);x.lineTo(0,.34);x.lineTo(-.17,.2);x.closePath();x.fill();break;
+    case 'arches':x.fillRect(-.4,-.28,.8,.62);x.fillStyle=bg;[-.26,0,.26].forEach(function(px){[-.04,.2].forEach(function(py){x.beginPath();x.moveTo(px-.08,py+.12);x.lineTo(px-.08,py);x.arc(px,py,.08,Math.PI,0);x.lineTo(px+.08,py+.12);x.closePath();x.fill()})});break;
+    case 'barrel':x.beginPath();x.ellipse(0,0,.27,.36,0,0,6.2832);x.fill();x.strokeStyle=bg;x.lineWidth=.05;[-.15,.15].forEach(function(py){x.beginPath();x.moveTo(-.24,py);x.lineTo(.24,py);x.stroke()});circ(bg,0,0,.045);break;
+    case 'bell':x.beginPath();x.moveTo(-.32,.22);x.lineTo(-.26,.1);x.arc(0,-.06,.26,Math.PI,0);x.lineTo(.26,.1);x.lineTo(.32,.22);x.closePath();x.fill();circ(c,0,.29,.07);circ(c,0,-.34,.05);break;
+    case 'mono':x.font='700 .72px '+CF;x.textAlign='center';x.textBaseline='middle';x.fillText(cfg.ch||'?',0,.04);break;
+    case 'mountain':poly(c,[[-.42,.3],[-.08,-.3],[.26,.3]]);poly(c,[[0,.3],[.2,-.02],[.42,.3]]);poly(bg,[[-.08,-.3],[-.18,-.12],[-.1,-.16],[-.05,-.1],[.02,-.16],[.0,-.12]]);break;
+    case 'crown':poly(c,[[-.36,.18],[-.36,-.18],[-.18,.0],[0,-.28],[.18,.0],[.36,-.18],[.36,.18]]);x.fillRect(-.36,.2,.72,.1);circ(bg,-.2,.07,.035);circ(bg,0,.07,.035);circ(bg,.2,.07,.035);break;
+    case 'anchor':x.lineWidth=.07;x.beginPath();x.arc(0,-.28,.07,0,6.2832);x.stroke();x.beginPath();x.moveTo(0,-.2);x.lineTo(0,.3);x.stroke();x.beginPath();x.moveTo(-.16,-.1);x.lineTo(.16,-.1);x.stroke();x.beginPath();x.arc(0,.08,.3,.15,Math.PI-.15);x.stroke();break;
+    case 'wave':x.lineWidth=.07;[-.2,0,.2].forEach(function(py){x.beginPath();for(var k=-.36;k<=.36;k+=.04){var yy=py+Math.sin(k*11)*.06;if(k===-.36)x.moveTo(k,yy);else x.lineTo(k,yy)}x.stroke()});break;
+    case 'bee':x.save();x.globalAlpha=.55;x.beginPath();x.ellipse(-.16,-.12,.14,.07,-.6,0,6.2832);x.fill();x.beginPath();x.ellipse(.16,-.12,.14,.07,.6,0,6.2832);x.fill();x.restore();x.beginPath();x.ellipse(0,.06,.14,.22,0,0,6.2832);x.fill();x.strokeStyle=bg;x.lineWidth=.045;[-.02,.1].forEach(function(py){x.beginPath();x.moveTo(-.13,py);x.lineTo(.13,py);x.stroke()});circ(c,0,-.2,.06);break;
+    case 'ball':x.lineWidth=.05;x.beginPath();x.arc(0,0,.32,0,6.2832);x.stroke();poly(c,[[0,-.12],[.11,-.04],[.07,.1],[-.07,.1],[-.11,-.04]]);x.lineWidth=.035;for(i=0;i<5;i++){var d=-Math.PI/2+i*Math.PI*2/5;x.beginPath();x.moveTo(Math.cos(d)*.12,Math.sin(d)*.12);x.lineTo(Math.cos(d)*.31,Math.sin(d)*.31);x.stroke()}break;
+    case 'tree':x.fillRect(-.04,.08,.08,.3);circ(c,0,-.14,.2);circ(c,-.16,.02,.15);circ(c,.16,.02,.15);break;
+    case 'leaf':x.beginPath();x.moveTo(-.3,.3);x.quadraticCurveTo(-.42,-.3,.3,-.32);x.quadraticCurveTo(.4,.34,-.3,.3);x.fill();x.strokeStyle=bg;x.lineWidth=.04;x.beginPath();x.moveTo(-.28,.28);x.lineTo(.16,-.16);x.stroke();break;
+    case 'lion':for(i=0;i<12;i++){var la=i*Math.PI/6;circ(c,Math.cos(la)*.27,Math.sin(la)*.27,.085)}circ(c,0,0,.26);circ(bg,0,.02,.17);circ(c,-.07,-.03,.03);circ(c,.07,-.03,.03);poly(c,[[-.04,.05],[.04,.05],[0,.11]]);break;
+    case 'wolf':poly(c,[[-.3,-.34],[-.1,-.12],[.1,-.12],[.3,-.34],[.28,.06],[.09,.32],[-.09,.32],[-.28,.06]]);poly(bg,[[-.2,-.02],[-.06,.02],[-.2,.06]]);poly(bg,[[.2,-.02],[.06,.02],[.2,.06]]);poly(bg,[[-.06,.2],[.06,.2],[0,.28]]);break;
+    case 'eagle':poly(c,[[-.42,-.12],[-.2,-.22],[0,-.04],[.2,-.22],[.42,-.12],[.3,.12],[.1,.04],[0,.32],[-.1,.04],[-.3,.12]]);circ(c,0,-.14,.08);poly(bg,[[-.03,-.14],[.03,-.14],[0,-.08]]);break;
+    case 'moon':circ(c,0,0,.3);circ(bg,.13,-.04,.26);break;
+    case 'ship':poly(c,[[-.36,.12],[.36,.12],[.22,.3],[-.22,.3]]);x.lineWidth=.04;x.beginPath();x.moveTo(0,-.36);x.lineTo(0,.12);x.stroke();poly(c,[[.03,-.34],[.03,.07],[.28,.07]]);poly(c,[[-.03,-.2],[-.03,.07],[-.22,.07]]);break;
+    case 'fish':x.beginPath();x.ellipse(-.04,0,.28,.16,0,0,6.2832);x.fill();poly(c,[[.18,0],[.38,-.16],[.38,.16]]);circ(bg,-.16,-.04,.03);break;
+    case 'cross':x.fillRect(-.08,-.34,.16,.68);x.fillRect(-.3,-.12,.6,.16);break;
+    case 'bolt':poly(c,[[.08,-.36],[-.2,.04],[-.02,.04],[-.1,.36],[.2,-.06],[.02,-.06]]);break;
+    case 'flame':x.beginPath();x.moveTo(0,-.36);x.quadraticCurveTo(.3,-.05,.18,.2);x.quadraticCurveTo(0,.4,-.18,.2);x.quadraticCurveTo(-.3,-.05,0,-.36);x.fill();x.fillStyle=bg;x.beginPath();x.moveTo(0,-.02);x.quadraticCurveTo(.1,.1,.06,.2);x.quadraticCurveTo(0,.28,-.06,.2);x.quadraticCurveTo(-.1,.1,0,-.02);x.fill();break;
+    case 'cog':circ(c,0,0,.21);for(i=0;i<8;i++){x.save();x.rotate(i*Math.PI/4);x.fillRect(-.05,-.34,.1,.14);x.restore()}circ(bg,0,0,.09);break;
+    case 'book':poly(c,[[-.38,-.18],[-.02,-.1],[-.02,.3],[-.38,.22]]);poly(c,[[.38,-.18],[.02,-.1],[.02,.3],[.38,.22]]);break;
+    case 'diamond':poly(c,[[0,-.36],[.28,0],[0,.36],[-.28,0]]);poly(bg,[[0,-.18],[.14,0],[0,.18],[-.14,0]]);break;
+    case 'lily':x.beginPath();x.ellipse(0,-.1,.08,.24,0,0,6.2832);x.fill();[-1,1].forEach(function(sg){x.beginPath();x.ellipse(sg*.16,.0,.07,.2,sg*.8,0,6.2832);x.fill()});x.fillRect(-.2,.14,.4,.06);x.fillRect(-.06,.2,.12,.14);break;
+    case 'key':x.lineWidth=.07;x.beginPath();x.arc(-.18,-.14,.1,0,6.2832);x.stroke();x.beginPath();x.moveTo(-.1,-.07);x.lineTo(.3,.28);x.stroke();x.beginPath();x.moveTo(.16,.16);x.lineTo(.26,.06);x.stroke();break;
+    case 'ring':x.lineWidth=.06;x.beginPath();x.arc(0,0,.3,0,6.2832);x.stroke();for(i=0;i<8;i++){var r8=i*Math.PI/4;star(c,Math.cos(r8)*.3,Math.sin(r8)*.3,.07)}star(c,0,0,.14);break;
+  }
+  x.restore();
+  x.restore();
+}
+
 function drawText(x,p,t,imgs,o){
   var ink=t.ink,sh=lum(ink)>.55?'rgba(0,0,0,.45)':'rgba(255,255,255,.4)';
   var name=(p.name||(o.ph?'Nombre':'')).toUpperCase();
@@ -1214,7 +1308,7 @@ function processFile(file,maxDim){
 
 /* ---------- estado ---------- */
 function defaults(typeId){
-  return{id:null,name:'',pos:'DC',flag:'CR',flagImg:null,club:'',crest:null,stats:[86,82,74,84,38,79],rating:0,auto:true,typeId:typeId||'oro',photo:null,photoStyle:'cut',zoom:1,ox:0,oy:0};
+  return{id:null,name:'',pos:'DC',flag:'CR',flagImg:null,club:'',crest:null,crestId:null,stats:[86,82,74,84,38,79],rating:0,auto:true,typeId:typeId||'oro',photo:null,photoStyle:'cut',zoom:1,ox:0,oy:0};
 }
 var state=defaults(),curImgs={photo:null,crest:null,flag:null};
 var editingType=null,ctypes=[],players=[],cat='normal',loaded=false;
@@ -1300,6 +1394,7 @@ function syncLabels(){
 }
 function syncSliders(){$('f-zoom').value=state.zoom;$('f-ox').value=state.ox;$('f-oy').value=state.oy}
 function syncForm(){
+  syncCrestSel();
   $('f-name').value=state.name;$('f-pos').value=state.pos;$('f-club').value=state.club;
   $('f-flag').value=state.flag||'NONE';$('flag-custom').hidden=state.flag!=='CUSTOM';
   for(var i=0;i<6;i++)$('s'+i).value=state.stats[i];
@@ -1323,12 +1418,22 @@ async function pickImage(e,maxDim,apply){
   catch(err){toast('No pude leer esa imagen. Prueba con PNG o JPG.')}
   e.target.value='';
 }
+function crestPrev(){
+  var c=$('crest-prev');if(!c)return;var x=c.getContext('2d');x.clearRect(0,0,144,144);
+  if(state.crestId&&CRESTMAP[state.crestId])drawCrest(x,CRESTMAP[state.crestId],72,72,62);
+  else if(curImgs.crest){var im=curImgs.crest,w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,k=Math.min(130/w,130/h);x.drawImage(im,72-w*k/2,72-h*k/2,w*k,h*k)}
+}
+function syncCrestSel(){var cs=$('f-crestsel');if(!cs)return;cs.value=state.crestId&&CRESTMAP[state.crestId]?state.crestId:(state.crest?'CUSTOM':'');crestPrev();setTimeout(crestPrev,150)}
 function bindForm(){
   var sel=$('f-pos');
   POS.forEach(function(p){var o=document.createElement('option');o.value=p[0];o.textContent=p[0]+' · '+p[1];sel.appendChild(o)});
   var fs=$('f-flag');
   [['NONE','Sin bandera'],['CUSTOM','Bandera propia (subir imagen)']].forEach(function(p){var o=document.createElement('option');o.value=p[0];o.textContent=p[1];fs.appendChild(o)});
   COUNTRIES.slice().sort(function(a,b){return a[1].localeCompare(b[1],'es')}).forEach(function(p){var o=document.createElement('option');o.value=p[0];o.textContent=p[1];fs.appendChild(o)});
+  var cs=$('f-crestsel');
+  [['','Sin escudo'],['CUSTOM','Escudo propio (subir imagen)']].forEach(function(p){var o=document.createElement('option');o.value=p[0];o.textContent=p[1];cs.appendChild(o)});
+  CRESTD.forEach(function(g){var og=document.createElement('optgroup');og.label=g[0];g[1].forEach(function(r){var o=document.createElement('option');o.value=crestSlug(r[0]);o.textContent=r[0];og.appendChild(o)});cs.appendChild(og)});
+  cs.addEventListener('change',function(){var v=cs.value;if(v==='CUSTOM'){state.crestId=null;if(!state.crest)$('f-crestfile').click()}else if(!v){state.crestId=null;state.crest=null;curImgs.crest=null}else{state.crestId=v}crestPrev();schedule()});
   var ps=$('te-pat');
   PATNAMES.forEach(function(p){var o=document.createElement('option');o.value=p[0];o.textContent=p[1];ps.appendChild(o)});
   renderStatInputs();
@@ -1344,9 +1449,9 @@ function bindForm(){
   $('f-oy').addEventListener('input',function(e){state.oy=parseInt(e.target.value,10);schedule()});
   $('btn-center').addEventListener('click',function(){state.zoom=1;state.ox=0;state.oy=0;syncSliders();schedule()});
   $('btn-remove').addEventListener('click',function(){state.photo=null;curImgs.photo=null;schedule()});
-  $('btn-crest-remove').addEventListener('click',function(){state.crest=null;curImgs.crest=null;schedule()});
+  $('btn-crest-remove').addEventListener('click',function(){state.crest=null;state.crestId=null;curImgs.crest=null;syncCrestSel();schedule()});
   $('f-file').addEventListener('change',function(e){pickImage(e,1000,function(u){state.photo=u;state.zoom=1;state.ox=0;state.oy=0;syncSliders()})});
-  $('f-crestfile').addEventListener('change',function(e){pickImage(e,420,function(u){state.crest=u})});
+  $('f-crestfile').addEventListener('change',function(e){pickImage(e,420,function(u){state.crest=u;state.crestId=null;syncCrestSel()})});
   $('f-flagfile').addEventListener('change',function(e){pickImage(e,420,function(u){state.flagImg=u;state.flag='CUSTOM'})});
   $('cat-seg').addEventListener('click',function(e){var b=e.target.closest('button[data-cat]');if(!b)return;cat=b.getAttribute('data-cat');renderChips()});
   $('te-new').addEventListener('click',function(){openEditor(null)});
@@ -1416,7 +1521,7 @@ async function saveEditor(){
 /* ---------- guardar, nueva, exportar ---------- */
 function newId(){return 'p_'+Date.now().toString(36)+Math.floor(Math.random()*46656).toString(36)}
 function snap(){
-  return{id:state.id||newId(),name:state.name.trim(),pos:state.pos,flag:state.flag,flagImg:state.flagImg||null,club:state.club.trim(),crest:state.crest||null,
+  return{id:state.id||newId(),name:state.name.trim(),pos:state.pos,flag:state.flag,flagImg:state.flagImg||null,club:state.club.trim(),crest:state.crest||null,crestId:state.crestId||null,
     stats:state.stats.slice(0,6),rating:state.rating,auto:state.auto,typeId:state.typeId,photo:state.photo||null,
     photoStyle:state.photoStyle,zoom:state.zoom,ox:state.ox,oy:state.oy,updated:Date.now()};
 }
@@ -1578,7 +1683,7 @@ async function drawThumb(cv,p){
   var x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);x.imageSmoothingQuality='high';x.drawImage(off,0,0,cv.width,cv.height);
 }
 async function loadPlayer(p){
-  state={id:p.id,name:p.name||'',pos:p.pos||'DC',flag:p.flag||'NONE',flagImg:p.flagImg||null,club:p.club||'',crest:p.crest||null,
+  state={id:p.id,name:p.name||'',pos:p.pos||'DC',flag:p.flag||'NONE',flagImg:p.flagImg||null,club:p.club||'',crest:p.crest||null,crestId:p.crestId||null,
     stats:(p.stats||[]).slice(0,6),rating:p.rating||0,auto:!!p.auto,typeId:p.typeId||'oro',photo:p.photo||null,
     photoStyle:p.photoStyle||'cut',zoom:p.zoom||1,ox:p.ox||0,oy:p.oy||0};
   while(state.stats.length<6)state.stats.push(70);
@@ -2005,7 +2110,7 @@ function pickType(){
 async function fillData(d){
   var prev=state;
   state=defaults(pickType());
-  state.club=prev.club||'';state.crest=prev.crest||null;
+  state.club=prev.club||'';state.crest=prev.crest||null;state.crestId=prev.crestId||null;
   state.name=d.name;state.pos=d.pos;state.flag=d.nat;state.photo=null;state.photoStyle='cut';
   if($('g-stats').checked)state.stats=randomStats(d.pos,state.typeId);
   state.auto=true;state.rating=avg();
@@ -2015,7 +2120,7 @@ async function fillData(d){
 async function fillCard(d,png){
   var photo=await processFile(png,1000),prev=state;
   state=defaults(prev.typeId);
-  state.club=prev.club||'';state.crest=prev.crest||null;
+  state.club=prev.club||'';state.crest=prev.crest||null;state.crestId=prev.crestId||null;
   state.name=d.name;state.pos=d.pos;state.flag=d.nat;state.photo=photo;state.photoStyle=gen.cut?'cut':'frame';
   if($('g-stats').checked)state.stats=randomStats(d.pos,state.typeId);
   state.auto=true;state.rating=avg();
