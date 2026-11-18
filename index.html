@@ -302,11 +302,12 @@ input:disabled{opacity:.55}
 
         <section class="block">
           <h2>Exportar</h2>
-          <label class="f">Tamaño del PNG
+          <label class="f">Formato y tamaño
             <select id="f-scale">
-              <option value="1">Normal · 720 × 1008</option>
-              <option value="2">Alta · 1440 × 2016</option>
-              <option value="3">Muy alta · 2160 × 3024</option>
+              <option value="light" selected>Liviana · WebP de 20 KB o menos (recomendada)</option>
+              <option value="1">PNG normal · 720 × 1008</option>
+              <option value="2">PNG alta · 1440 × 2016</option>
+              <option value="3">PNG muy alta · 2160 × 3024</option>
             </select>
           </label>
           <div id="webm-row" hidden style="margin-top:14px">
@@ -335,7 +336,7 @@ input:disabled{opacity:.55}
   <div class="dock" id="dock">
     <button type="button" class="btn" id="d-new">Nueva</button>
     <button type="button" class="btn" id="d-save">Guardar</button>
-    <button type="button" class="btn primary" id="d-dl">Descargar PNG</button>
+    <button type="button" class="btn primary" id="d-dl">Descargar carta</button>
   </div>
   <div class="gdock" id="gdock">
     <button type="button" class="btn" id="g-rand">Aleatorio</button>
@@ -1543,7 +1544,28 @@ function saveBlob(blob,name){
   a.href=u;a.download=name;document.body.appendChild(a);a.click();
   setTimeout(function(){URL.revokeObjectURL(u);a.remove()},2000);
 }
+var LIGHT_KB=20;
+function toBlobQ(c,q){return new Promise(function(r){c.toBlob(r,'image/webp',q)})}
+async function renderLight(p,t,imgs,maxKB){
+  await fontsReady;var max=(maxKB||LIGHT_KB)*1024;
+  var big=document.createElement('canvas');big.width=W;big.height=H;drawCard(big.getContext('2d'),p,t,imgs,{ph:false});
+  var best=null,widths=[512,448,400,360,320,288,256];
+  for(var wi=0;wi<widths.length;wi++){
+    var w=widths[wi],c=document.createElement('canvas');c.width=w;c.height=Math.round(H*w/W);
+    var x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(big,0,0,c.width,c.height);
+    var lo=.3,hi=.92,ok=null,b;
+    b=await toBlobQ(c,lo);if(!b||b.type!=='image/webp')return null;
+    if(!best||b.size<best.size)best=b;
+    if(b.size>max)continue;
+    ok=b;
+    for(var k=0;k<6;k++){var m=(lo+hi)/2;b=await toBlobQ(c,m);if(b&&b.size<=max){ok=b;lo=m}else hi=m}
+    if(lo>=.5)return ok;
+    best=ok;
+  }
+  return best;
+}
 async function renderPNG(p,t,imgs){
+  if($('f-scale').value==='light'){var lb=await renderLight(p,t,imgs);if(lb)return lb}
   await fontsReady;
   var sc=parseInt($('f-scale').value,10)||1;
   var c=document.createElement('canvas');c.width=W*sc;c.height=H*sc;
@@ -1555,7 +1577,7 @@ async function exportPNG(p,t,imgs){
   try{
     var blob=await renderPNG(p,t,imgs);
     if(!blob){toast('No se pudo crear la imagen');return}
-    saveBlob(blob,(slug(p.name)||'carta')+'-'+(slug(t.name)||'tipo')+'.png');toast('Descargando carta…');
+    saveBlob(blob,(slug(p.name)||'carta')+'-'+(slug(t.name)||'tipo')+(blob.type==='image/webp'?'.webp':'.png'));toast('Descargando carta…');
   }catch(e){toast('No se pudo crear la imagen')}
 }
 var recording=false;
@@ -1653,7 +1675,7 @@ async function downloadAll(){
   toast('Descargando '+players.length+' cartas…');
   for(var i=0;i<players.length;i++){
     var p=players[i],imgs=await loadImgs(p),blob=await renderPNG(p,typeById(p.typeId),imgs);
-    if(blob)saveBlob(blob,(slug(p.name)||'carta')+'-'+(slug(typeById(p.typeId).name)||'tipo')+'.png');
+    if(blob)saveBlob(blob,(slug(p.name)||'carta')+'-'+(slug(typeById(p.typeId).name)||'tipo')+(blob.type==='image/webp'?'.webp':'.png'));
     await sleep(450);
   }
 }
@@ -2260,7 +2282,17 @@ async function restoreDraft(){
 document.addEventListener('visibilitychange',function(){if(document.hidden)doSave()});
 window.addEventListener('pagehide',doSave);
 /* ---------- arranque ---------- */
-window.__cards={state:function(){return state},imgs:function(){return curImgs},encode:function(t,sc){return encodeWebCodecs(t,sc,function(){})},type:function(){return curType()},gen:function(){return gen},NAT:NAT,COUNTRIES:COUNTRIES,drawFlag:drawFlag};
+window.__cards={state:function(){return state},imgs:function(){return curImgs},encode:function(t,sc){return encodeWebCodecs(t,sc,function(){})},type:function(){return curType()},gen:function(){return gen},NAT:NAT,COUNTRIES:COUNTRIES,drawFlag:drawFlag,
+  crestIds:function(){var r=[];CRESTD.forEach(function(g){g[1].forEach(function(q){r.push(crestSlug(q[0]))})});return r},
+  batchCard:async function(p,w,fmt,q){
+    await fontsReady;var t=typeById(p.typeId),imgs=await loadImgs(p),sc=w/W;
+    var c=document.createElement('canvas');c.width=Math.round(W*sc);c.height=Math.round(H*sc);
+    var x=c.getContext('2d');x.scale(sc,sc);drawCard(x,p,t,imgs,{ph:false});
+    return c.toDataURL(fmt==='png'?'image/png':'image/webp',q)},
+  batchCrest:function(id,size,fmt,q){
+    var c=document.createElement('canvas');c.width=c.height=size;var x=c.getContext('2d');
+    if(CRESTMAP[id])drawCrest(x,CRESTMAP[id],size/2,size/2,size*.44);
+    return c.toDataURL(fmt==='png'?'image/png':'image/webp',q)}};
 bindForm();bindGen();syncRating();syncForm();schedule();show('gen');initStore().then(restoreDraft,restoreDraft);
 })();
 </script>
