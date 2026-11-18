@@ -1481,7 +1481,8 @@ async function unzipX(buf){
 function xdec(s){return s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&#(\d+);/g,function(_,c){return String.fromCharCode(c)}).replace(/&amp;/g,'&')}
 function xcol(r){var n=0;for(var i=0;i<r.length;i++)n=n*26+r.charCodeAt(i)-64;return n-1}
 async function readXlsx(file){
-  var z=await unzipX(await file.arrayBuffer()),ss=[];
+  var buf;try{buf=await file.arrayBuffer()}catch(e1){buf=await new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){res(fr.result)};fr.onerror=function(){rej(fr.error||e1)};fr.readAsArrayBuffer(file)})}
+  var z=await unzipX(buf),ss=[];
   (z['xl/sharedStrings.xml']||'').replace(/<si>[\s\S]*?<\/si>/g,function(si){ss.push(xdec((si.match(/<t[^>]*>[\s\S]*?<\/t>/g)||[]).map(function(t){return t.replace(/<[^>]+>/g,'')}).join('')));return ''});
   var wbx=z['xl/workbook.xml']||'',rels=z['xl/_rels/workbook.xml.rels']||'',H={};
   (wbx.match(/<sheet [^>]*>/g)||[]).forEach(function(t){
@@ -1582,7 +1583,7 @@ function bindEquipos(){
   $('eq-xlsx').addEventListener('change',async function(e){
     var f=e.target.files&&e.target.files[0];if(!f)return;
     try{var keep=$('eq-sel').value;await eqFromXlsx(f);eqFillSel(keep);eqRender();$('eq-status').textContent='Excel cargado.'}
-    catch(er){$('eq-status').textContent='No pude leer ese Excel: '+errText(er)}
+    catch(er){$('eq-status').textContent=(er&&(er.name==='NotReadableError'||/could not be read/i.test(String(er.message||er))))?'Android no me deja leer ese archivo (suele pasar si lo tienes abierto en tu app de hojas de cálculo, o si lo elegiste desde Drive o Recientes). Ciérralo allá, guarda una copia en Descargas y vuelve a elegirlo desde Descargas.':'No pude leer ese Excel: '+errText(er)}
     e.target.value=''});
   $('eq-reset').addEventListener('click',function(){var keep=$('eq-sel').value;eqDefault();eqFillSel(keep);eqRender()});
 }
