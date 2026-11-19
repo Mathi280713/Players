@@ -2411,6 +2411,7 @@ function pickType(){
 }
 async function fillData(d){
   var prev=state;
+  if(prev.code){toast('Esta carta es del jugador '+prev.code+': se conservan sus datos');await refreshImgs();syncForm();return}
   state=defaults(pickType());
   state.club=prev.club||'';state.crest=prev.crest||null;state.crestId=prev.crestId||null;
   state.name=d.name;state.pos=d.pos;state.flag=d.nat;state.photo=null;state.photoStyle='cut';
@@ -2421,6 +2422,7 @@ async function fillData(d){
 }
 async function fillCard(d,png){
   var photo=await processFile(png,1000),prev=state;
+  if(prev.code){state=Object.assign({},prev);state.photo=photo;state.photoStyle=gen.cut?'cut':'frame';state.zoom=1;state.ox=0;state.oy=0;toast('Foto puesta en el jugador '+prev.code);await refreshImgs();syncForm();return}
   state=defaults(prev.typeId);
   state.club=prev.club||'';state.crest=prev.crest||null;state.crestId=prev.crestId||null;
   state.name=d.name;state.pos=d.pos;state.flag=d.nat;state.photo=photo;state.photoStyle=gen.cut?'cut':'frame';
